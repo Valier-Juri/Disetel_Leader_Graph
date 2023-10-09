@@ -1,0 +1,57 @@
+function coords = generate_coordinates(n,p,q)
+    coords = [];
+    for i = 0:n
+        for j = 0:p^i-1
+            for k = 0:q^(n-i)-1
+                coords = [coords; [i, j, k]];
+            end
+        end
+    end
+end
+
+function [transformed_coords, edge_library] = transform_coordinates(coords, n, p, q)
+    transformed_coords = [];
+    edge_library = [];
+    for i = 1:size(coords, 1)
+        coord = coords(i, :);
+        j = coord(2);
+        k = coord(3);
+        transformed_coord = [coord(1)/n, (2*j+1)/(2*p^coord(1)), (2*k+1)/(2*q^(n-coord(1)))];
+        transformed_coords = [transformed_coords; transformed_coord];
+        if coord(1) < n
+            childrens = [coord(1)+1, j*p+(1:p), k/q*ones(1,p)];
+            transformed_childrens = [coord(1)/n, (2*childrens(:,2:end-1)+1)./(2*(p^(coord(1)+1))), (2*childrens(:,end)+1)/(2*q^(n-coord(1)-1))];
+            edge_library = [edge_library; [repmat(transformed_coord, size(transformed_childrens, 1), 1), transformed_childrens]];
+        end
+    end
+end
+
+n = 5;
+p = 2;
+q = 2;
+
+coords = generate_coordinates(n, p, q);
+fprintf('5%%\n');
+[transformed_coords, edge_library] = transform_coordinates(coords, n, p, q);
+fprintf('10%%\n');
+x = transformed_coords(:, 2);
+y = transformed_coords(:, 3);
+z = transformed_coords(:, 1);
+figure();
+scatter3(x, y, z, 'red');
+
+xlabel('Transformed First Entry');
+ylabel('Transformed Second Entry');
+zlabel('Transformed Third Entry');
+fprintf('40%%\n');
+hold on;
+
+% Plot the edges
+for i = 1:size(edge_library, 1)
+    z_edge = edge_library(i, [1, 4]);
+    x_edge = edge_library(i, [2, 5]);
+    y_edge = edge_library(i, [3, 6]);
+    plot3(x_edge, y_edge, z_edge, 'b');
+end
+
+hold off;
